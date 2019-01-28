@@ -1,47 +1,55 @@
-export function getUserRating(user) {
+export function getLongevityRating(yearsActive) {
+  return yearsActive + Math.floor(yearsActive / 5) * 2;
+}
+
+export function getGamesPlayedRating(games, membershipLevel) {
   let rating = 0;
-  
-  rating += user.yearsActive * 1;
+  const { won, draw, lost, forfeited } = games;
+  if (won) {
+    rating += won * 3;
+  }
 
-  if (user.yearsActive >= 5) {
-    if (user.yearsActive % 5 === 0) {
-      rating += (user.yearsActive / 5) * 2;
+  if (draw) {
+    rating += draw * 1;
+  }
+
+  if (lost) {
+    rating -= lost * 1;
+  }
+
+  if (forfeited) {
+    if (membershipLevel !== 'gold') {
+      rating -= forfeited * 2;
     }
   }
 
-  if (user.membershipLevel !== 'free') {
-    if (user.membershipLevel === 'gold') {
-      rating += 3;
-    }
-  
-    if (user.membershipLevel === 'silver') {
-      rating += 2;
-    }
-  
-    if (user.membershipLevel === 'bronze') {
-      rating += 1;
-    }  
-  } else {
-    rating += 0;
-  }
-
-  if (user.games.won) {
-    rating += user.games.won * 3;
-  }
-
-  if (user.games.draw) {
-    rating += user.games.draw * 1;
-  }
-
-  if (user.games.lost) {
-    rating -= user.games.lost * 1;
-  }
-
-  if (user.games.forfeited) {
-    if (user.membershipLevel !== 'go1d') {
-      rating -= user.games.forfeited * 2;
-    }
-  }
+  // Give one extra point per ten games
+  const gamesPlayed = won + draw + lost;
+  rating += Math.floor(gamesPlayed / 10);
 
   return rating;
+}
+
+export function getMembershipRating(membershipLevel) {
+  switch (membershipLevel) {
+    case 'gold':
+      return 3;
+    case 'silver':
+      return 2;
+    case 'bronze':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+export function getUserRating(user) {
+  const longevityRating = getLongevityRating(user.yearsActive);
+  const membershipRating = getMembershipRating(user.membershipLevel);
+
+  const gamesPlayedRating = getGamesPlayedRating(
+    user.games,
+    user.membershipLevel
+  );
+  return longevityRating + membershipRating + gamesPlayedRating;
 }
